@@ -9,6 +9,8 @@ Small demo repository for showing a basic software supply-chain flow with:
 
 The CI pipeline demonstrates npm build, Maven build, Docker build, Docker push to Artifactory, JFrog build-info publication, and Xray build scanning.
 
+> Demo warning: this repository intentionally includes old vulnerable npm and Maven dependencies so Xray has findings to display. Do not use these dependency versions in a real application.
+
 ## Repository Layout
 
 ```text
@@ -80,3 +82,7 @@ The GitHub Actions workflow:
 10. Runs an Xray build scan.
 
 The workflow intentionally uses the official JFrog setup action, avoids real secrets, and lets failures fail the job normally.
+
+## Vulnerability Demo Inputs
+
+The frontend and backend include intentionally old dependency versions to create visible Xray findings across npm and Maven ecosystems. The Xray scan uses `--fail=false` so the demo shows violations and vulnerabilities while still completing the CI run.
