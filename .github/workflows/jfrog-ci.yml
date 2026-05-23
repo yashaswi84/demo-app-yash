@@ -65,12 +65,20 @@ jobs:
           echo "::add-mask::$password"
           echo "::add-mask::$docker_registry"
           echo "JF_URL=$url" >> "$GITHUB_ENV"
-          echo "ARTIFACTORY_USERNAME_VALUE=$user" >> "$GITHUB_ENV"
           case "$password" in
             eyJ*)
+              payload="${password#*.}"
+              payload="${payload%%.*}"
+              token_user="$(node -e 'const payload = process.argv[1].replace(/-/g, "+").replace(/_/g, "/"); const sub = JSON.parse(Buffer.from(payload, "base64").toString("utf8")).sub || ""; const marker = "/users/"; console.log(sub.includes(marker) ? sub.slice(sub.lastIndexOf(marker) + marker.length) : "");' "$payload")"
+              if [ -n "$token_user" ]; then
+                user="$token_user"
+              fi
+              echo "::add-mask::$user"
+              echo "ARTIFACTORY_USERNAME_VALUE=$user" >> "$GITHUB_ENV"
               echo "JF_ACCESS_TOKEN=$password" >> "$GITHUB_ENV"
               ;;
             *)
+              echo "ARTIFACTORY_USERNAME_VALUE=$user" >> "$GITHUB_ENV"
               echo "JF_USER=$user" >> "$GITHUB_ENV"
               echo "JF_PASSWORD=$password" >> "$GITHUB_ENV"
               ;;
