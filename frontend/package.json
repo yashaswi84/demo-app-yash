@@ -1,0 +1,13 @@
+{
+  "name": "jfrog-supply-chain-demo-frontend",
+  "version": "1.0.0",
+  "description": "Tiny frontend build artifact for a JFrog supply-chain demo.",
+  "private": true,
+  "scripts": {
+    "build": "node src/index.js",
+    "test": "node src/index.js --check"
+  },
+  "engines": {
+    "node": ">=20"
+  }
+}
