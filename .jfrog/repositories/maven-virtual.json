@@ -2,7 +2,5 @@
   "key": "${repoPrefix}-maven-virtual",
   "rclass": "virtual",
   "packageType": "maven",
-  "repositories": [
-    "${repoPrefix}-maven-remote"
-  ]
+  "repositories": "${repoPrefix}-maven-remote"
 }
