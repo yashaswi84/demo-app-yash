@@ -13,7 +13,7 @@ permissions:
 env:
   BUILD_NAME: jfrog-supply-chain-demo
   BUILD_NUMBER: ${{ github.run_number }}
-  IMAGE_NAME: jfrog-supply-chain-demo
+  IMAGE_NAME: demo-app-yash
 
 jobs:
   build-push-scan:
@@ -47,18 +47,26 @@ jobs:
       - name: Verify JFrog connection
         run: jf rt ping
 
+      - name: Configure npm resolver
+        working-directory: frontend
+        run: jf npm-config --repo-resolve="${{ secrets.REPO_PREFIX }}-npm-virtual"
+
       - name: Build frontend
         working-directory: frontend
         run: |
-          npm ci
+          jf npm ci --build-name="$BUILD_NAME" --build-number="$BUILD_NUMBER"
           npm run build
+
+      - name: Configure Maven resolver
+        working-directory: backend
+        run: jf mvn-config --repo-resolve-releases="${{ secrets.REPO_PREFIX }}-maven-virtual" --repo-resolve-snapshots="${{ secrets.REPO_PREFIX }}-maven-virtual"
 
       - name: Build backend
         working-directory: backend
-        run: mvn clean package
+        run: jf mvn clean package --build-name="$BUILD_NAME" --build-number="$BUILD_NUMBER"
 
       - name: Prepare image tag
-        run: echo "IMAGE_TAG=${{ secrets.DOCKER_REGISTRY }}/${{ secrets.REPO_PREFIX }}/${IMAGE_NAME}:${GITHUB_SHA}" >> "$GITHUB_ENV"
+        run: echo "IMAGE_TAG=${{ secrets.DOCKER_REGISTRY }}/${{ secrets.REPO_PREFIX }}-docker-local/${IMAGE_NAME}:${GITHUB_SHA}" >> "$GITHUB_ENV"
 
       - name: Docker login to Artifactory
         run: jf docker login "${{ secrets.DOCKER_REGISTRY }}" --username "${{ secrets.ARTIFACTORY_USERNAME }}" --password "${{ secrets.ARTIFACTORY_PASSWORD }}"

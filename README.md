@@ -31,7 +31,7 @@ Create these GitHub repository secrets before running the workflow:
 - `ARTIFACTORY_USERNAME`: demo or service account username
 - `ARTIFACTORY_PASSWORD`: demo password or access token
 - `DOCKER_REGISTRY`: Docker registry host, for example `acme.jfrog.io`
-- `REPO_PREFIX`: Docker repository path or prefix, for example `docker-local` or `team-demo/docker-local`
+- `REPO_PREFIX`: repository prefix, for example `team-demo`
 
 Do not commit real credentials. `demo-fake-secrets.txt` contains fake values only for demo setup notes.
 
@@ -71,11 +71,11 @@ The GitHub Actions workflow:
 1. Checks out the repository.
 2. Installs Node.js and Java.
 3. Sets up JFrog CLI with `jfrog/setup-jfrog-cli@v4`.
-4. Runs `npm ci` and `npm run build` in `frontend/`.
-5. Runs `mvn clean package` in `backend/`.
+4. Configures npm to resolve from `${REPO_PREFIX}-npm-virtual`, then runs `jf npm ci` and `npm run build` in `frontend/`.
+5. Configures Maven to resolve from `${REPO_PREFIX}-maven-virtual`, then runs `jf mvn clean package` in `backend/`.
 6. Builds the Docker image.
 7. Logs in to Artifactory Docker registry.
-8. Pushes the Docker image with JFrog CLI build-info collection.
+8. Pushes `${DOCKER_REGISTRY}/${REPO_PREFIX}-docker-local/demo-app-yash:${github.sha}` with JFrog CLI build-info collection.
 9. Publishes JFrog build info.
 10. Runs an Xray build scan.
 
