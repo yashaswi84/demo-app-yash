@@ -37,10 +37,21 @@ jobs:
           java-version: "17"
           cache: maven
 
+      - name: Normalize JFrog URL
+        env:
+          ARTIFACTORY_URL_RAW: ${{ secrets.ARTIFACTORY_URL }}
+        run: |
+          url="${ARTIFACTORY_URL_RAW%/}"
+          case "$url" in
+            http://*|https://*) ;;
+            *) url="https://$url" ;;
+          esac
+          echo "::add-mask::$url"
+          echo "JF_URL=$url" >> "$GITHUB_ENV"
+
       - name: Setup JFrog CLI
         uses: jfrog/setup-jfrog-cli@v4
         env:
-          JF_URL: ${{ secrets.ARTIFACTORY_URL }}
           JF_USER: ${{ secrets.ARTIFACTORY_USERNAME }}
           JF_PASSWORD: ${{ secrets.ARTIFACTORY_PASSWORD }}
 
