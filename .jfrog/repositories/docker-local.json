@@ -1,0 +1,6 @@
+{
+  "key": "${repoPrefix}-docker-local",
+  "rclass": "local",
+  "packageType": "docker",
+  "dockerApiVersion": "V2"
+}

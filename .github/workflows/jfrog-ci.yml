@@ -84,6 +84,24 @@ jobs:
       - name: Verify JFrog connection
         run: jf rt ping
 
+      - name: Ensure Artifactory demo repositories
+        run: |
+          ensure_repo() {
+            template="$1"
+            if jf rt repo-create "$template" --vars "repoPrefix=${REPO_PREFIX_VALUE}"; then
+              echo "Created repository from $template"
+            else
+              jf rt repo-update "$template" --vars "repoPrefix=${REPO_PREFIX_VALUE}"
+              echo "Updated repository from $template"
+            fi
+          }
+
+          ensure_repo .jfrog/repositories/npm-remote.json
+          ensure_repo .jfrog/repositories/npm-virtual.json
+          ensure_repo .jfrog/repositories/maven-remote.json
+          ensure_repo .jfrog/repositories/maven-virtual.json
+          ensure_repo .jfrog/repositories/docker-local.json
+
       - name: Configure npm resolver
         working-directory: frontend
         run: jf npm-config --repo-resolve="${REPO_PREFIX_VALUE}-npm-virtual"

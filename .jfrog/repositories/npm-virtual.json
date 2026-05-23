@@ -1,0 +1,8 @@
+{
+  "key": "${repoPrefix}-npm-virtual",
+  "rclass": "virtual",
+  "packageType": "npm",
+  "repositories": [
+    "${repoPrefix}-npm-remote"
+  ]
+}
