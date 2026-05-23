@@ -37,30 +37,48 @@ jobs:
           java-version: "17"
           cache: maven
 
-      - name: Normalize JFrog URL
+      - name: Normalize JFrog inputs
         env:
           ARTIFACTORY_URL_RAW: ${{ secrets.ARTIFACTORY_URL }}
+          ARTIFACTORY_USERNAME_RAW: ${{ secrets.ARTIFACTORY_USERNAME }}
+          ARTIFACTORY_PASSWORD_RAW: ${{ secrets.ARTIFACTORY_PASSWORD }}
+          DOCKER_REGISTRY_RAW: ${{ secrets.DOCKER_REGISTRY }}
+          REPO_PREFIX_RAW: ${{ secrets.REPO_PREFIX }}
         run: |
-          url="${ARTIFACTORY_URL_RAW%/}"
+          url="${ARTIFACTORY_URL_RAW#ARTIFACTORY_URL=}"
+          url="${url%/}"
           case "$url" in
             http://*|https://*) ;;
             *) url="https://$url" ;;
           esac
+
+          user="${ARTIFACTORY_USERNAME_RAW#ARTIFACTORY_USERNAME=}"
+          password="${ARTIFACTORY_PASSWORD_RAW#ARTIFACTORY_PASSWORD=}"
+          docker_registry="${DOCKER_REGISTRY_RAW#DOCKER_REGISTRY=}"
+          docker_registry="${docker_registry#http://}"
+          docker_registry="${docker_registry#https://}"
+          docker_registry="${docker_registry%/}"
+          repo_prefix="${REPO_PREFIX_RAW#REPO_PREFIX=}"
+
           echo "::add-mask::$url"
+          echo "::add-mask::$user"
+          echo "::add-mask::$password"
+          echo "::add-mask::$docker_registry"
           echo "JF_URL=$url" >> "$GITHUB_ENV"
+          echo "JF_USER=$user" >> "$GITHUB_ENV"
+          echo "JF_PASSWORD=$password" >> "$GITHUB_ENV"
+          echo "DOCKER_REGISTRY_VALUE=$docker_registry" >> "$GITHUB_ENV"
+          echo "REPO_PREFIX_VALUE=$repo_prefix" >> "$GITHUB_ENV"
 
       - name: Setup JFrog CLI
         uses: jfrog/setup-jfrog-cli@v4
-        env:
-          JF_USER: ${{ secrets.ARTIFACTORY_USERNAME }}
-          JF_PASSWORD: ${{ secrets.ARTIFACTORY_PASSWORD }}
 
       - name: Verify JFrog connection
         run: jf rt ping
 
       - name: Configure npm resolver
         working-directory: frontend
-        run: jf npm-config --repo-resolve="${{ secrets.REPO_PREFIX }}-npm-virtual"
+        run: jf npm-config --repo-resolve="${REPO_PREFIX_VALUE}-npm-virtual"
 
       - name: Build frontend
         working-directory: frontend
@@ -70,17 +88,17 @@ jobs:
 
       - name: Configure Maven resolver
         working-directory: backend
-        run: jf mvn-config --repo-resolve-releases="${{ secrets.REPO_PREFIX }}-maven-virtual" --repo-resolve-snapshots="${{ secrets.REPO_PREFIX }}-maven-virtual"
+        run: jf mvn-config --repo-resolve-releases="${REPO_PREFIX_VALUE}-maven-virtual" --repo-resolve-snapshots="${REPO_PREFIX_VALUE}-maven-virtual"
 
       - name: Build backend
         working-directory: backend
         run: jf mvn clean package --build-name="$BUILD_NAME" --build-number="$BUILD_NUMBER"
 
       - name: Prepare image tag
-        run: echo "IMAGE_TAG=${{ secrets.DOCKER_REGISTRY }}/${{ secrets.REPO_PREFIX }}-docker-local/${IMAGE_NAME}:${GITHUB_SHA}" >> "$GITHUB_ENV"
+        run: echo "IMAGE_TAG=${DOCKER_REGISTRY_VALUE}/${REPO_PREFIX_VALUE}-docker-local/${IMAGE_NAME}:${GITHUB_SHA}" >> "$GITHUB_ENV"
 
       - name: Docker login to Artifactory
-        run: jf docker login "${{ secrets.DOCKER_REGISTRY }}" --username "${{ secrets.ARTIFACTORY_USERNAME }}" --password "${{ secrets.ARTIFACTORY_PASSWORD }}"
+        run: jf docker login "$DOCKER_REGISTRY_VALUE" --username "$JF_USER" --password "$JF_PASSWORD"
 
       - name: Build Docker image
         run: jf docker build -t "$IMAGE_TAG" .
