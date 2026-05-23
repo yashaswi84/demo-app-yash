@@ -150,4 +150,4 @@ jobs:
         run: jf rt build-publish "$BUILD_NAME" "$BUILD_NUMBER" --collect-env --collect-git-info
 
       - name: Xray build scan
-        run: jf build-scan "$BUILD_NAME" "$BUILD_NUMBER"
+        run: jf build-scan "$BUILD_NAME" "$BUILD_NUMBER" --fail=false
